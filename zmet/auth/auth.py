@@ -12,6 +12,7 @@ from flask_login import (
     current_user,
     LoginManager,
 )
+import urllib.parse
 from .. import config
 from .user import User
 
@@ -49,10 +50,16 @@ def index():
 
 @auth.route("/login")
 def login():
-    return """
+    next = request.args.get("next")
+    if next:
+        next = urllib.parse.quote_plus(next)
+    else:
+        next = ""
+    return f"""
     <h3 class="title">Login</h3>
     <form method="POST" action="/auth/login">
         <input type="password" name="password">
+        <input type="hidden" name="next" value="{next}">
         <button>Login</button>
     </form>
     """
@@ -61,13 +68,20 @@ def login():
 @auth.route("/login", methods=["POST"])
 def login_post():
     pasw = request.form.get("password")
+    next = request.form.get("next")
+    # TODO: csfr protection
 
     if pasw != config.zmet_pasw:
         flash("Please check your login details and try again.")
         return redirect(url_for("auth.login"))
 
     login_user(User(), remember=True)
-    return redirect(url_for("auth.index"))
+
+    if next:
+        next = urllib.parse.unquote_plus(next)
+        return redirect(next)
+    else:
+        return redirect(url_for("auth.index"))
 
 
 @auth.route("/logout")

@@ -11,12 +11,10 @@ def init():
     try:
         with open("cache/keep.json", "r") as f:
             state = json.load(f)
-            keep.restore(state)
-            print("keep restored")
     except FileNotFoundError:
-        pass
+        state = None
 
-    keep.login(config.keep_user, config.keep_pasw)
+    keep.login(config.keep_user, config.keep_pasw, state=state)
 
 
 def outit():
