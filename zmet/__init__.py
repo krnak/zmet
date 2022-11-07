@@ -1,5 +1,6 @@
 from flask import Flask, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
+from flask_login import login_required
 
 from . import keep
 from .auth import auth
@@ -38,3 +39,12 @@ print("img registered")
 @app.route("/")
 def index():
     return redirect(url_for("search.index"))
+
+
+@app.route("/sync")
+@login_required
+def sync():
+    print("sync requested...")
+    keep.keep.sync()
+    print("synced")
+    return "synced"
