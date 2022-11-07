@@ -7,6 +7,7 @@ from . import search
 from . import links
 from . import config
 from . import add
+from . import img
 
 keep.init()
 
@@ -29,6 +30,10 @@ print("links registered")
 
 app.register_blueprint(add.add)
 print("add registered")
+
+app.register_blueprint(img.img)
+print("img registered")
+
 
 @app.route("/")
 def index():

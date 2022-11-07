@@ -14,7 +14,7 @@ def init():
     except FileNotFoundError:
         state = None
 
-    keep.login(config.keep_user, config.keep_pasw, state=state)
+    keep.login(config.keep_user, config.keep_pasw, state=state, sync=False)
 
 
 def outit():
