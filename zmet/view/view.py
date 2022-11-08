@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, render_template, abort, request
+from flask_login import current_user
 import markdown
 
 from ..keep import keep
@@ -12,27 +13,36 @@ class Card:
             setattr(self, k, v)
 
 
-def get_thumbnail(note):
+def note_to_card(note):
     if note.images:
-        return f"/img/{note.server_id}:0"
+        thumbnail = f"/img/{note.server_id}:0"
     else:
-        return None
+        thumbnail = None
+
+    md = markdown.Markdown(extensions=["nl2br"])
+    html = md.convert(note.text)
+
+    return Card(
+        thumbnail=thumbnail,
+        title=note.title,
+        text=html,
+    )
 
 
-@view.route("/wall/<label>")
-def wall(label):
+@view.route("/wall")
+def wall():
+    label = request.args.get("label")
+    if not label:
+        abort(404, "label argument required")
+
     if label not in ["blog", "test"]:
-        abort(403)
-    cards = [
-        Card(
-            thumbnail=get_thumbnail(note),
-            title=note.title,
-            text=markdown.markdown(note.text, extensions=['nl2br']),
-        )
-        for note in keep.find(labels=[keep.findLabel(label)])
-    ]
+        if current_user.is_anonymous:
+            abort(403)
+
+    notes = keep.find_labels_extended([label])
+    notes.sort(key=lambda x: x.timestamps.updated)
     return render_template(
         "wall.html",
-        cards=cards,
-        title="Změť: blog",
+        cards=[note_to_card(note) for note in notes],
+        title="Změť: " + label,
     )
