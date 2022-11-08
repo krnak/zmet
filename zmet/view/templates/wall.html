@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body {
+      padding: 2em;
+    }
+
+    @media (min-width: 576px) {
+      .card-columns {
+        column-count: 1;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .card-columns {
+        column-count: 2;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .card-columns {
+        column-count: 3;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .card-columns {
+        column-count: 4;
+      }
+    }
+</style>
+
+<div class="container">
+  <div class="card-columns">
+    {% for card in cards %}
+        <div class="card">
+            {% if card.thumbnail %}
+                <img class="card-img-top" src="{{ card.thumbnail }}" alt="Card image cap">
+            {% endif %}
+            <div class="card-body">
+                {% if card.title %}
+                    <h5 class="card-title">{{ card.title }}</h5>
+                {% endif %}
+                {% if card.text %}
+                    <p class="card-text">{{ card.text | safe }}</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

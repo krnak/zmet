@@ -9,6 +9,7 @@ from . import links
 from . import config
 from . import add
 from . import img
+from .view import view
 
 keep.init()
 
@@ -34,6 +35,9 @@ print("add registered")
 
 app.register_blueprint(img.img)
 print("img registered")
+
+app.register_blueprint(view.view)
+print("view registered")
 
 
 @app.route("/")
