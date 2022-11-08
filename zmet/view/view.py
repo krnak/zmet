@@ -19,13 +19,22 @@ def note_to_card(note):
     else:
         thumbnail = None
 
-    md = markdown.Markdown(extensions=["nl2br"])
-    html = md.convert(note.text)
+    # remove last line if i contains labels
+    lines = note.text.split("\n")
+    if lines:
+        if "#" in lines[-1]:
+            lines = lines[:-1]
+    text = "\n".join(lines)
+
+    md = markdown.Markdown(extensions=["nl2br", "meta"])
+    html = md.convert(text)
+    link = md.Meta.get("link", [None])[0]
 
     return Card(
         thumbnail=thumbnail,
         title=note.title,
         text=html,
+        link=link,
     )
 
 
