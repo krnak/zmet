@@ -1,6 +1,7 @@
 from flask import Flask, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
 from flask_login import login_required
+from urllib.parse import quote_plus, unquote_plus
 
 from . import keep
 from .auth import auth
@@ -16,6 +17,8 @@ keep.init()
 app = Flask(__name__)
 app.secret_key = config.app_secret_key
 app.debug = True
+app.jinja_env.filters['quote_plus'] = lambda u: quote_plus(u)
+app.jinja_env.filters['unquote_plus'] = lambda u: unquote_plus(u)
 
 csrf = CSRFProtect()
 csrf.init_app(app)

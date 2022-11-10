@@ -1,52 +1,96 @@
-from flask import redirect, request, Blueprint
+from flask import redirect, request, Blueprint, abort, url_for, render_template
 from flask_login import login_required
 from flask_wtf.csrf import generate_csrf
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import quote_plus
+
 from .keep import keep
 
-add = Blueprint("add", __name__, url_prefix="/add")
+add = Blueprint("add", __name__, url_prefix="/add", template_folder="templates")
 
 
 @add.route("/note", methods=["GET"])
 @login_required
-def add_note_get():
-    return f"""
-    <h3 class="title">create note</h3></ br>
-    <form method="POST" action="/add/note">
-        <input type="text" name="title"></ br>
-        <textarea name="text" rows="5" cols="33"></textarea></ br>
-        <input type="text" name="labels"></ br>
-        <input type="hidden" name="csrf_token" value="{ generate_csrf() }" />
-        <button>create</button>
-    </form>
-    """
+def note_form():
+    return render_template(
+        "add_note.html",
+        args=request.args,
+        csfr_token=generate_csrf(),
+    )
 
 
 @add.route("/note", methods=["POST"])
 @login_required
-def add_note_post():
+def note():
     title = request.form.get("title") or ""
     text = request.form.get("text") or ""
     labels = request.form.get("labels") or ""
     note = add_note_inner(title, text, labels)
-    return redirect("/s/" + note.server_id)
+    next = request.form.get("next", f"/s/{note.server_id}")
+    return redirect(next)
 
 
 def add_note_inner(title="", text="", labels=""):
+    print("creating new note:", title)
     note = keep.createNote(title, text)
     for label_name in labels.split(","):
-        label = keep.findLabel(label_name, create=True)
-        note.labels.add(label)
+        label = keep.findLabel(label_name)
+        if label:
+            note.labels.add(label)
     keep.sync()
+    print("new note id:", note.server_id)
     return note
 
 
-@add.route("/bookmark", methods=["POST"])
+@add.route("/bookmark", methods=["GET"])
 @login_required
-def add_bookmark_inner():
-    pass
+def bookmark():
+    query = request.args.get("q")
+    if not query:
+        abort(404, "q argument is missing")
+    words = query.split(" ")
+    if len(words) < 2:
+        abort(404, "too few words")
+    label = words[0]
+    url = words[-1]
+    title = " ".join(words[1:-1])
+    if not title:
+        title = get_page_title(url)
+    labels = ["bm"]
+    if keep.findLabel(label):
+        labels.append(label)
+    return redirect(url_for(
+        "add.note",
+        title=quote_plus(title),
+        text=quote_plus(f"{ url }\n#{ label }"),
+        labels=",".join(labels),
+        next=quote_plus(url)
+    ))
 
 
-@add.route("/redirection", methods=["POST"])
+@add.route("/redirection", methods=["GET"])
 @login_required
-def add_redirection_inner():
-    pass
+def redirection():
+    query = request.args.get("q")
+    if not query:
+        abort(404, "q argument is missing")
+    words = query.split(" ")
+    if len(words) < 2:
+        abort(404, "too few words")
+    key = words[0]
+    url = words[1]
+    search = words[2] if len(words) > 1 else ""
+    return redirect(url_for(
+        "add.note",
+        title=quote_plus(f"#rd {key}"),
+        text=quote_plus(f"{url}\n{search}"),
+        labels="rd",
+        next=quote_plus(url),
+    ))
+
+
+def get_page_title(url):
+    page = requests.get(url)
+    soup = BeautifulSoup(page.text)
+    return soup.title.string

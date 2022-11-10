@@ -9,13 +9,11 @@ from .keep import keep
 
 
 def try_redirect(query):
-    print("try_redirecting", query)
     if not query:
         return None
     words = query.split(" ")
     note = keep.find_redirection(words[0])
     if not note:
-        print("try_redirecting", "no red")
         return None
     lines = note.text.split("\n")
     url = lines[0]

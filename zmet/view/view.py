@@ -47,7 +47,6 @@ def note_to_card(note):
 def wall():
     label = request.args.get("label")
     query = request.args.get("q")
-    print("wall", label, query)
     if (label and query) or (not label and not query):
         abort(404, "invalid number of arguments")
 
