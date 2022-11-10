@@ -20,7 +20,6 @@ def cached(func):
 
 class WrappedKeep(Keep):
     def find_labels_extended(self, labels):
-        print("seatch", labels)
         result = None
         for label in labels:
             # plaintext search
