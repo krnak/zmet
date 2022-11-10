@@ -3,6 +3,7 @@ from flask_login import current_user
 import markdown
 
 from ..keep import keep
+from ..label import is_public
 
 view = Blueprint("view", __name__, template_folder='templates')
 
@@ -19,16 +20,20 @@ def note_to_card(note):
     else:
         thumbnail = None
 
-    # remove last line if i contains labels
     lines = note.text.split("\n")
-    if lines:
-        if "#" in lines[-1]:
-            lines = lines[:-1]
+    if lines and lines[-1] and lines[-1][0] == "#":
+        lines[-1] = " " + lines[-1]
     text = "\n".join(lines)
 
-    md = markdown.Markdown(extensions=["nl2br", "meta"])
+    md = markdown.Markdown(extensions=["nl2br"])
     html = md.convert(text)
-    link = md.Meta.get("link", [None])[0]
+    # TODO: click-able cards
+    # TODO: card teaser
+    if keep.findLabel("bm") in note.labels.all():
+        link = note.text.split("\n")[0]
+        html = ""
+    else:
+        link = None
 
     return Card(
         thumbnail=thumbnail,
@@ -41,17 +46,29 @@ def note_to_card(note):
 @view.route("/wall")
 def wall():
     label = request.args.get("label")
-    if not label:
-        abort(404, "label argument required")
+    query = request.args.get("q")
+    print("wall", label, query)
+    if (label and query) or (not label and not query):
+        abort(404, "invalid number of arguments")
 
-    if label not in ["blog", "test"]:
+    if label:
+        notes = keep.find_labels_extended([label])
+    else:
         if current_user.is_anonymous:
-            abort(403)
+            abort(403, "only label view allowed for anonymous users")
+        notes = keep.find(query)
 
-    notes = keep.find_labels_extended([label])
+    if current_user.is_anonymous:
+        notes = filter(is_public, notes)
+
+    notes = list(notes)
     notes.sort(key=lambda x: x.timestamps.updated)
+
+    if not notes:
+        return "<h1>empty wall</h1>"
+
     return render_template(
         "wall.html",
         cards=[note_to_card(note) for note in notes],
-        title="Změť: " + label,
+        title="Změť - " + (label or query),
     )

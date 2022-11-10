@@ -1,11 +1,13 @@
 from flask import (
     request,
-    flash,
     redirect,
     Blueprint,
+    url_for,
 )
 from flask_login import login_required
-from .keep import keep
+from urllib.parse import quote_plus
+
+from .redirection import try_redirect
 
 search = Blueprint("search", __name__, url_prefix="/search")
 
@@ -15,14 +17,14 @@ search = Blueprint("search", __name__, url_prefix="/search")
 def index():
     query = request.args.get("q")
     if query:
-        redirection = find_redirection(query)
-        if redirection:
-            return redirection
+        red = try_redirect(query.rstrip())
+        if red:
+            return red
         if query.startswith("s "):
-            return find_notes(query[2:])
+            return redirect(url_for("view.wall", q=query[2:]))
         if query.startswith("#"):
-            return find_notes(query)
-        return redirect("https://google.com/search?q=" + query)
+            return redirect(url_for("view.wall", label=query[1:]))
+        return redirect("https://google.com/search?q=" + quote_plus(query))
     else:
         return """
         <form action="/search" method="GET">
@@ -30,44 +32,3 @@ def index():
             <button>search</button>
         </form>
         """
-
-
-def find_notes(query):
-    labels = []
-    words = []
-    for word in query.split("."):
-        if word.startswith("#"):
-            label = keep.findLabel(word[1:])
-            if label:
-                labels.append(label)
-            else:
-                flash(f"unknow label {word}")
-        else:
-            words.append(word)
-    res = "<ul>"
-    for note in keep.find(query=" ".join(words), labels=labels):
-        name = note.title if note.title else note.server_id
-        res += f"<li><a href='/s/{note.server_id}'>{name}</li>"
-    res += "</ul>"
-    return res
-
-
-def find_redirection(query):
-    words = query.split(" ")
-    keyword = words[0]
-    redirection = list(keep.find(
-        "#rd " + keyword,
-        labels=[keep.findLabel("rd")],
-    ))
-    if len(redirection) > 2:
-        return "more redirection found"
-    if redirection:
-        site, search, *_ = redirection[0].text.split("\n")
-        query = " ".join(words[1:])
-        if query:
-            link = search.format(query=query)
-        else:
-            link = site
-        return redirect(link)
-    else:
-        return None
