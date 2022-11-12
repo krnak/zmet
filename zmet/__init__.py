@@ -14,7 +14,7 @@ from .view import view
 
 keep.init()
 
-app = Flask(__name__)
+app = Flask("zmet")
 app.secret_key = config.app_secret_key
 app.debug = True
 app.jinja_env.filters['quote_plus'] = lambda u: quote_plus(u)
@@ -25,22 +25,22 @@ csrf.init_app(app)
 
 app.register_blueprint(auth.auth)
 auth.init(app)
-print("auth registered")
+app.logger.info("auth registered")
 
 app.register_blueprint(search.search)
-print("search registered")
+app.logger.info("search registered")
 
 app.register_blueprint(links.links)
-print("links registered")
+app.logger.info("links registered")
 
 app.register_blueprint(add.add)
-print("add registered")
+app.logger.info("add registered")
 
 app.register_blueprint(img.img)
-print("img registered")
+app.logger.info("img registered")
 
 app.register_blueprint(view.view)
-print("view registered")
+app.logger.info("view registered")
 
 
 @app.route("/")
@@ -51,7 +51,7 @@ def index():
 @app.route("/sync")
 @login_required
 def sync():
-    print("sync requested...")
+    app.logger.info("sync requested...")
     keep.keep.sync()
-    print("synced")
+    app.logger.info("synced")
     return "synced"
