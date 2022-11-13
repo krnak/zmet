@@ -34,7 +34,7 @@ def note():
 
 def add_note_inner(title="", text="", labels=""):
     print("creating new note:", title)
-    note = keep.createNote(title, text)
+    note = keep.createNote(title, text.replace("\r", ""))
     for label_name in labels.split(","):
         label = keep.findLabel(label_name)
         if label:
