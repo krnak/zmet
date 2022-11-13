@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort, request
-from flask_login import current_user
+from flask_login import current_user, login_required
 import markdown
 
 from .keep import keep
@@ -44,20 +44,21 @@ def note_to_card(note):
 
 
 @wall_bp.route("/wall")
+@login_required
 def wall():
-    label = request.args.get("label")
+    labels = request.args.get("labels")
     query = request.args.get("q")
-    if (label and query) or (not label and not query):
+    if (labels and query) or (not labels and not query):
         abort(404, "invalid number of arguments")
 
-    if label:
-        notes = keep.find_labels_extended([label])
+    if labels:
+        notes = keep.find_labels_extended(labels.split(","))
     else:
-        if current_user.is_anonymous:
+        if current_user.id != "admin":
             abort(403, "only label view allowed for anonymous users")
         notes = keep.find(query)
 
-    if current_user.is_anonymous:
+    if current_user.id != "admin":
         notes = filter(is_public, notes)
 
     notes = list(notes)
@@ -69,5 +70,5 @@ def wall():
     return render_template(
         "wall.html",
         cards=[note_to_card(note) for note in notes],
-        title="Změť - " + (label or query),
+        title="Změť - " + (labels or query),
     )
