@@ -6,12 +6,13 @@ from bs4 import BeautifulSoup
 from urllib.parse import quote_plus
 
 from .keep import keep
+from .auth import admin_required
 
 add = Blueprint("add", __name__, url_prefix="/add", template_folder="templates")
 
 
 @add.route("/note", methods=["GET"])
-@login_required
+@admin_required
 def note_form():
     return render_template(
         "add_note.html",
@@ -21,7 +22,7 @@ def note_form():
 
 
 @add.route("/note", methods=["POST"])
-@login_required
+@admin_required
 def note():
     title = request.form.get("title") or ""
     text = request.form.get("text") or ""
@@ -44,7 +45,7 @@ def add_note_inner(title="", text="", labels=""):
 
 
 @add.route("/bookmark", methods=["GET"])
-@login_required
+@admin_required
 def bookmark():
     query = request.args.get("q")
     if not query:
@@ -70,7 +71,7 @@ def bookmark():
 
 
 @add.route("/redirection", methods=["GET"])
-@login_required
+@admin_required
 def redirection():
     query = request.args.get("q")
     if not query:

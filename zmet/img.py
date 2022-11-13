@@ -1,4 +1,5 @@
 from flask import Blueprint, abort, send_file
+from flask_login import login_required
 from .keep import keep
 import os
 import requests
@@ -10,6 +11,7 @@ IMG_CACHE_PATH = config.image_cache_path
 
 
 @img.route("/<id>")
+@login_required
 def get(id):
     filename = f"{IMG_CACHE_PATH}/{id}"
     if id not in os.listdir(IMG_CACHE_PATH):

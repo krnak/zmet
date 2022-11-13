@@ -3,16 +3,16 @@ from flask import (
     redirect,
     Blueprint,
 )
-from flask_login import login_required
 from urllib.parse import quote_plus
 
 from .redirection import try_redirect
+from .auth import admin_required
 
 search = Blueprint("search", __name__, url_prefix="/search")
 
 
 @search.route("/")
-@login_required
+@admin_required
 def index():
     query = request.args.get("q")
     if query:

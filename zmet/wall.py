@@ -2,10 +2,10 @@ from flask import Blueprint, render_template, abort, request
 from flask_login import current_user
 import markdown
 
-from ..keep import keep
-from ..label import is_public
+from .keep import keep
+from .label import is_public
 
-view = Blueprint("view", __name__, template_folder='templates')
+wall_bp = Blueprint("wall", __name__, template_folder='templates')
 
 
 class Card:
@@ -43,7 +43,7 @@ def note_to_card(note):
     )
 
 
-@view.route("/wall")
+@wall_bp.route("/wall")
 def wall():
     label = request.args.get("label")
     query = request.args.get("q")

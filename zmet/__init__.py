@@ -1,20 +1,20 @@
 from flask import Flask, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
-from flask_login import login_required
 from urllib.parse import quote_plus, unquote_plus
+from flask_login import login_required
 
 from . import keep
-from .auth import auth
+from . import auth
 from . import search
 from . import links
 from . import config
 from . import add
 from . import img
-from .view import view
+from . import wall
 
 keep.init()
 
-app = Flask("zmet")
+app = Flask("zmet", template_folder="templates")
 app.secret_key = config.app_secret_key
 app.debug = True
 app.jinja_env.filters['quote_plus'] = lambda u: quote_plus(u)
@@ -39,17 +39,18 @@ app.logger.info("add registered")
 app.register_blueprint(img.img)
 app.logger.info("img registered")
 
-app.register_blueprint(view.view)
-app.logger.info("view registered")
+app.register_blueprint(wall.wall_bp)
+app.logger.info("wall registered")
 
 
 @app.route("/")
+@login_required
 def index():
-    return redirect(url_for("search.index"))
+    return redirect(url_for("wall.wall", label="zmet_index"))
 
 
 @app.route("/sync")
-@login_required
+@auth.admin_required
 def sync():
     app.logger.info("sync requested...")
     keep.keep.sync()
