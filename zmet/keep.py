@@ -1,4 +1,4 @@
-from gkeepapi import Keep
+import gkeepapi
 from flask import abort
 import json
 import atexit
@@ -18,7 +18,7 @@ def cached(func):
     return wrapper
 
 
-class WrappedKeep(Keep):
+class WrappedKeep(gkeepapi.Keep):
     def find_labels_extended(self, labels):
         result = None
         for label in labels:
@@ -85,7 +85,15 @@ def init():
     except FileNotFoundError:
         state = None
 
-    keep.login(config.keep_user, config.keep_pasw, state=state, sync=False)
+    try:
+        keep.login(config.keep_user, config.keep_pasw, state=state, sync=False)
+    except gkeepapi.exception.LoginException:
+        keep.resume(
+            config.keep_user,
+            config.keep_master_token,
+            state=state,
+            sync=False,
+        )
 
 
 def save():
