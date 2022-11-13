@@ -22,7 +22,7 @@
   <input id="labels-input" type="text" name="labels" value="{{ args.get("labels", "") }}" placeholder="comma separated labels" class="form-control input-md">
   </div>
 </div>
-<input type="hidden" name="csrf_token" value="{{ csfr_token }}" />
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 <input type="hidden" name="next" value="{{ args.get("next", "") | unquote_plus  }}" />
 <div class="form-group">
   <div class="col-md-4">

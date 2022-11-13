@@ -12,6 +12,7 @@ from flask_login import (
     current_user,
     LoginManager,
 )
+from flask_wtf.csrf import generate_csrf
 import urllib.parse
 from .. import config
 from .user import User
@@ -40,10 +41,11 @@ def index():
     if current_user.is_anonymous:
         return redirect(url_for("auth.login"))
     else:
-        return """
+        return f"""
         <h3>Logged in</h3></ br>
         <form action="/auth/logout">
             <input type="submit" value="logout" />
+            <input type="hidden" name="csrf_token" value="{ generate_csrf() }">
         </form>
         """
 
@@ -59,7 +61,8 @@ def login():
     <h3 class="title">Login</h3>
     <form method="POST" action="/auth/login">
         <input type="password" name="password">
-        <input type="hidden" name="next" value="{next}">
+        <input type="hidden" name="next" value="{ next }">
+        <input type="hidden" name="csrf_token" value="{ generate_csrf() }">
         <button>Login</button>
     </form>
     """

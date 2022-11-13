@@ -51,10 +51,6 @@ http {
 cat /etc/nginx/sites-enabled/zmet.krnak.cz.conf
 server {
     server_name  zmet.krnak.cz;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-    }
 }
 ```
 
@@ -62,4 +58,13 @@ server {
 pacman -S certbot certbot-nginx
 certbot --nginx
 systemctl start nginx.service
+```
+add
+```conf
+cat /etc/nginx/sites-enabled/zmet.krnak.cz.conf
+...
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+    }
+...
 ```
