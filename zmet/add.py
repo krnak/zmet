@@ -81,7 +81,10 @@ def redirection():
         abort(404, "too few words")
     key = words[0]
     url = words[1]
-    search = words[2] if len(words) > 1 else ""
+    if len(words) > 1:
+        search = words[2]
+    else:
+        search = ""
     return redirect(url_for(
         "add.note",
         title=quote_plus(f"#rd {key}"),
