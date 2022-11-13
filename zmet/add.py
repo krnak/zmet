@@ -81,7 +81,7 @@ def redirection():
         abort(404, "too few words")
     key = words[0]
     url = words[1]
-    if len(words) > 1:
+    if len(words) > 2:
         search = words[2]
     else:
         search = ""
