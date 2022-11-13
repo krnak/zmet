@@ -16,6 +16,7 @@ google keep based personal knowledge database
 ## Run
 
 ```bash
+pip install poetry
 poetry install
 poetry shell
 gunicorn zmet:app
@@ -23,11 +24,31 @@ gunicorn zmet:app
 
 then connect to the `localhost:8000`
 
-## nginx
+## vps settings
+
+```bash
+ufw allow 22/tcp
+ufw reload
+ssh-keygen -lf /etc/ssh/ssh_host_ed25519_id.pub
+```
+
+```bash
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw reload
+pacman -S nginx
+```
+
+```conf
+cat /etc/nginx/nginx.conf
+http {
+    ...
+    include sites-enabled/*;
+}
+```
 
 ```conf
 cat /etc/nginx/sites-enabled/zmet.krnak.cz.conf
-# ZMET
 server {
     server_name  zmet.krnak.cz;
 
@@ -38,6 +59,7 @@ server {
 ```
 
 ```bash
-sudo certbot --nginx
-sudo systemctl start nginx.service
+pacman -S certbot certbot-nginx
+certbot --nginx
+systemctl start nginx.service
 ```
