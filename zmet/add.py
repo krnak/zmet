@@ -57,7 +57,10 @@ def bookmark():
     url = words[-1]
     title = " ".join(words[1:-1])
     if not title:
-        title = get_page_title(url)
+        try:
+            title = get_page_title(url)
+        except:
+            title = "no title"
     labels = ["bm"]
     if keep.findLabel(label):
         labels.append(label)
