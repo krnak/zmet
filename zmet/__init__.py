@@ -11,6 +11,8 @@ from . import config
 from . import add
 from . import img
 from . import wall
+from . import redirection
+from . import label
 
 keep.init()
 
@@ -46,7 +48,7 @@ app.logger.info("wall registered")
 @app.route("/")
 @login_required
 def index():
-    return redirect(url_for("wall.wall", label="zmet_index"))
+    return redirect(url_for("wall.wall", labels="zmet_index"))
 
 
 @app.route("/sync")
@@ -54,5 +56,7 @@ def index():
 def sync():
     app.logger.info("sync requested...")
     keep.keep.sync()
+    redirection.sync()
+    label.sync()
     app.logger.info("synced")
     return "synced"

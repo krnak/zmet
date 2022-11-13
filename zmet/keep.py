@@ -44,36 +44,6 @@ class WrappedKeep(gkeepapi.Keep):
         result = [self.get(id) for id in result]
         return result
 
-    @cached
-    def find_redirection(self, key):
-        notes = list(filter(
-            lambda x: x.title == f"#rd {key}",  # avoid prefix collisions
-            keep.find(
-                f"#rd {key}",
-                labels=[keep.findLabel("rd")]
-            )
-        ))
-        if not notes:
-            return None
-        if len(notes) > 1:
-            abort(500, f"two or more redirections found for key {key}")
-        return notes[0]
-
-    @cached
-    def find_label_note(self, key):
-        notes = list(filter(
-            lambda x: x.title == f"#label {key}",  # avoid prefix collisions
-            keep.find(
-                f"#label {key}",
-                labels=[keep.findLabel("label")]
-            )
-        ))
-        if not notes:
-            return None
-        if len(notes) > 1:
-            abort(500, f"two or more labels found for key {key}")
-        return notes[0]
-
 
 keep = WrappedKeep()
 

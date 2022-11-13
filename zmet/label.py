@@ -6,10 +6,12 @@
 from .keep import keep
 from gkeepapi.node import Note
 
+CACHE = dict()
+
 
 def labels_of(x):
     if isinstance(x, str):
-        note = keep.find_label_note(x)
+        note = CACHE.get(x)
         if not note:
             return None
         lines = note.text.split("\n")
@@ -28,3 +30,12 @@ def labels_of(x):
 
 def is_public(note):
     return "public" in labels_of(note)
+
+
+def sync():
+    global CACHE
+    CACHE = dict()
+    labels = keep.find(labels=[keep.findLabel("label")])
+    for label in labels:
+        key = label.title[7:]
+        CACHE[key] = label
