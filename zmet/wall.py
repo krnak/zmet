@@ -24,16 +24,16 @@ def note_to_card(note):
     if lines and lines[-1] and lines[-1][0] == "#":
         lines[-1] = " " + lines[-1]
     text = "\n".join(lines)
+    if len(text) > 100:
+        text = text[:97] + "..."
 
     md = markdown.Markdown(extensions=["nl2br"])
     html = md.convert(text)
-    # TODO: click-able cards
-    # TODO: card teaser
     if keep.findLabel("bm") in note.labels.all():
         link = note.text.split("\n")[0]
         html = ""
     else:
-        link = None
+        link = "/note/" + note.server_id
 
     return Card(
         thumbnail=thumbnail,

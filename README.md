@@ -12,6 +12,8 @@ google keep based personal knowledge database
 - [x] wall
 - [x] search
 - [x] images
+- [x] pages
+- [ ] gallery
 
 ## Run
 

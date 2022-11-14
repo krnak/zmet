@@ -6,7 +6,7 @@ from flask_login import login_required
 from . import keep
 from . import auth
 from . import search
-from . import links
+from . import page
 from . import config
 from . import add
 from . import img
@@ -32,8 +32,8 @@ app.logger.info("auth registered")
 app.register_blueprint(search.search)
 app.logger.info("search registered")
 
-app.register_blueprint(links.links)
-app.logger.info("links registered")
+app.register_blueprint(page.page)
+app.logger.info("page registered")
 
 app.register_blueprint(add.add)
 app.logger.info("add registered")
