@@ -18,9 +18,7 @@ def note(id):
     content = []
     # TODO: move content creation into jinja
     if note.images:
-        thumbnail = note.images[0].blob
-        if thumbnail.height < thumbnail.width:
-            content.append(f'<img src="/img/{ note.server_id }:0" /><br />')
+        content.append(f'<img src="/img/{ note.server_id }:0" /><br />')
     if note.title:
         content.append(f"<h1>{ note.title }</h1><br />")
     if note.text:
