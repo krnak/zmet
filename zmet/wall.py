@@ -62,7 +62,7 @@ def wall():
         notes = filter(is_public, notes)
 
     notes = list(notes)
-    notes.sort(key=lambda x: x.timestamps.updated)
+    notes.sort(key=lambda x: x.timestamps.created, reverse=True)
 
     if not notes:
         return "<h1>empty wall</h1>"
