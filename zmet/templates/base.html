@@ -15,26 +15,16 @@
 </head>
 
 <body>
-    <section>
-        <div>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <ul class="flashes">
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
-        </div>
+    <div>
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <div class="alert alert-warning" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+    </div>
 
-        <div>
-            <div>
-               {% block content %}
-               {% endblock %}
-            </div>
-        </div>
-    </section>
+   {% block content %}
+   {% endblock %}
 </body>
 
 </html>
