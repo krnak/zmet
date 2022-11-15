@@ -7,6 +7,7 @@
         <title>{{ title }}</title>
     {% endif %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.css" integrity="sha256-h/qtq9bUnXbOOwP4EcbLtYM9Mk3iQQcHZAZ+Jz5y0WQ=" crossorigin="anonymous">
     <style>
         body {
             background-color: rgb(245,245,245);
@@ -15,6 +16,8 @@
 </head>
 
 <body>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.js" integrity="sha256-rFpGp14r3gomlXcrHLI16T0sGFOr2/WJ33hQ27wi3z0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.js" integrity="sha256-8zr5JVFg+D25ThokmaFQa4EacLALNdZxFnQGM/g2kgc=" crossorigin="anonymous"></script>
     <div>
     {% with messages = get_flashed_messages() %}
         {% for message in messages %}
