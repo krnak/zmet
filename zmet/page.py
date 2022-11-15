@@ -22,6 +22,6 @@ def note(id):
     if note.title:
         content.append(f"<h1>{ note.title }</h1><br />")
     if note.text:
-        content.append(markdown.markdown(note.text, extensions=["nl2br"]))
+        content.append(markdown.markdown(note.text, extensions=["nl2br", "fenced_code"]))
 
     return render_template("page.html", content="".join(content))
