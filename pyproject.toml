@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "zmet"
 version = "0.0.0"
-description = "google keep based personal knowledge database"
+description = "personal knowledge database based on google keep"
 authors = ["Tomas Krnak <tomas@krnak.cz>"]
 license = "GNU"
 
