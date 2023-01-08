@@ -11,5 +11,5 @@ def get(id):
     if not eggs:
         abort(404)
     egg = eggs[0]
-    egg.text += f"viewed { time.strftime("%Y-%m-%d %H:%M:%S") } { int(time.time()) }\n"
+    egg.text += f"viewed { time.strftime('%Y-%m-%d %H:%M:%S') } { int(time.time()) }\n"
     return f"Congrats! You found egg { id }. For more info contact me at { config.keep_user }."
