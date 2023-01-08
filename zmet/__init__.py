@@ -13,6 +13,7 @@ from . import img
 from . import wall
 from . import redirection
 from . import label
+from . import egg
 
 keep.init()
 
@@ -43,6 +44,9 @@ app.logger.info("img registered")
 
 app.register_blueprint(wall.wall_bp)
 app.logger.info("wall registered")
+
+app.register_blueprint(egg.egg_bp)
+app.logger.info("egg registered")
 
 
 @app.route("/")
