@@ -13,4 +13,5 @@ def get(id):
     egg = eggs[0]
     egg.text += f"viewed { time.strftime('%Y-%m-%d %H:%M:%S') } { int(time.time()) }\n"
     egg.pinned = True
+    keep.sync()
     return f"Congrats! You found egg { id }. For more info contact me at { config.keep_user }"
