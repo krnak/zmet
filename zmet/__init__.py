@@ -14,6 +14,7 @@ from . import wall
 from . import redirection
 from . import label
 from . import egg
+from . import group
 
 keep.init()
 
@@ -62,5 +63,6 @@ def sync():
     keep.keep.sync()
     redirection.sync()
     label.sync()
+    group.sync()
     app.logger.info("synced")
-    return "synced"
+    return redirect(url_for("wall.wall", labels="zmet_index"))

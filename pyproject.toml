@@ -16,6 +16,7 @@ Markdown = "^3.4.1"
 gkeepapi = "^0.14.2"
 gunicorn = "^20.1.0"
 PyYAML = "^6.0"
+pycryptodome = "^3.16.0"
 
 [tool.poetry.dev-dependencies]
 

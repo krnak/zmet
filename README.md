@@ -70,3 +70,17 @@ cat /etc/nginx/sites-enabled/zmet.krnak.cz.conf
     }
 ...
 ```
+
+# access tokens
+
+ucet pro kazdeho -> group notes , share by ^@user ^group
+
+```python
+H = lambda x: b64_urlsafe_encode(sha256(x)[:15])
+tokens_secret = H(b"/tokens?sk=" + app_secret)
+purpose = b"view" | b"edit" | b"admin"
+token = H(b"note/" + note_id.encode() + b"/" + <purpose> + tokens_secret)
+
+pasw_secret = H(b"passwords?sk=" + app_secret)
+user_password = H(b"password?user=" + user_name + b"&sk=" + pasw_secret)
+```

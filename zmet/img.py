@@ -7,7 +7,7 @@ import shutil
 from . import config
 
 img = Blueprint("img", __name__, url_prefix="/img")
-IMG_CACHE_PATH = config.image_cache_path
+IMG_CACHE_PATH = config.cache_path + "/img"
 
 
 @img.route("/<id>")

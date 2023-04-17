@@ -21,7 +21,17 @@ def note(id):
         content.append(f'<img src="/img/{ note.server_id }:0" /><br />')
     if note.title:
         content.append(f"<h1>{ note.title }</h1><br />")
-    if note.text:
-        content.append(markdown.markdown(note.text, extensions=["nl2br", "fenced_code"]))
+
+    # strip labels
+    lines = note.text.split("\n")
+    print(lines)
+    while lines and lines[-1] == "":
+        lines.pop()
+    if lines and lines[-1].startswith("#"):
+        lines = lines[:-1]
+    text = "\n".join(lines)
+
+    if text:
+        content.append(markdown.markdown(text, extensions=["nl2br", "fenced_code"]))
 
     return render_template("page.html", content="".join(content))

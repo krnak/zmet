@@ -3,7 +3,9 @@ from flask_login import current_user, login_required
 import markdown
 
 from .keep import keep
-from .label import is_public
+from .label import is_public, labels_of
+from .access import visible
+from .ordering import order
 
 wall_bp = Blueprint("wall", __name__, template_folder='templates')
 
@@ -15,25 +17,31 @@ class Card:
 
 
 def note_to_card(note):
-    if note.images:
-        thumbnail = f"/img/{note.server_id}:0"
-    else:
-        thumbnail = None
+    # add thumbnail
+    thumbnail = f"/img/{note.server_id}:0" if note.images else None
 
+    # strip labels
     lines = note.text.split("\n")
-    if lines and lines[-1] and lines[-1][0] == "#":
-        lines[-1] = " " + lines[-1]
+    while lines and lines[-1] == "":  # strip empty lines
+        lines.pop()
+    if lines and lines[-1].startswith("#"):
+        lines = lines[:-1]
     text = "\n".join(lines)
-    if len(text) > 100:
-        text = text[:97] + "..."
 
-    md = markdown.Markdown(extensions=["nl2br"])
-    html = md.convert(text)
+    html: str = ""
     if keep.findLabel("bm") in note.labels.all():
         link = note.text.split("\n")[0]
-        html = ""
     else:
         link = "/note/" + note.server_id
+        if "dontstrip" in labels_of(note) or len(text) < 300:
+            md = markdown.Markdown(extensions=["nl2br"])
+            html = md.convert(text)
+        else:
+            html = "".join(
+                f"<p>{line}</p>"
+                for line in (text[:297] + "...").split("\n")
+            )
+
 
     return Card(
         thumbnail=thumbnail,
@@ -58,11 +66,9 @@ def wall():
             abort(403, "only label view allowed for anonymous users")
         notes = keep.find(query)
 
-    if current_user.id != "admin":
-        notes = filter(is_public, notes)
-
-    notes = list(notes)
+    notes = list(visible(notes))
     notes.sort(key=lambda x: x.timestamps.created, reverse=True)
+    notes = order(notes)
 
     if not notes:
         return "<h1>empty wall</h1>"

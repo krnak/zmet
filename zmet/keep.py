@@ -20,7 +20,10 @@ def cached(func):
 
 class WrappedKeep(gkeepapi.Keep):
     def find_labels_extended(self, labels):
+        print("searcg notes with labels:", labels)
         result = None
+        if not labels:
+            abort(400, "empty labels search")
         for label in labels:
             # plaintext search
             matched_1 = set([n.server_id for n in self.find("#" + label)])
@@ -33,7 +36,6 @@ class WrappedKeep(gkeepapi.Keep):
                 matched_2 = set([n.server_id for n in notes])
             else:
                 matched_2 = set()
-
             matched = matched_1 | matched_2
 
             if result is None:
@@ -41,7 +43,7 @@ class WrappedKeep(gkeepapi.Keep):
             else:
                 result &= matched
 
-        result = [self.get(id) for id in result]
+        result = [self.get(id) for id in matched]
         return result
 
 
@@ -50,14 +52,16 @@ keep = WrappedKeep()
 
 def init():
     try:
-        with open("cache/keep.json", "r") as f:
+        with open(config.cache_path + "/keep.json", "r") as f:
             state = json.load(f)
     except FileNotFoundError:
         state = None
 
     try:
+        print("trying to login by password")
         keep.login(config.keep_user, config.keep_pasw, state=state, sync=False)
     except gkeepapi.exception.LoginException:
+        print("trying to login by master_token")
         keep.resume(
             config.keep_user,
             config.keep_master_token,
