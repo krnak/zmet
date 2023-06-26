@@ -4,7 +4,7 @@
 """
 
 from .keep import keep
-from gkeepapi.node import Note
+from gkeepapi.node import Note, List
 
 CACHE = dict()
 
@@ -27,10 +27,12 @@ def labels_of(x):
             return []
         words = note.text.split()
         return set(x[1:] for x in words if x.startswith("#"))
-    elif isinstance(x, Note):
+    elif type(x) in (Note, List):
         keep_labels = set(label.name for label in x.labels.all())
         text_labels = set(x[1:] for x in x.text.split() if x.startswith("#"))
         return keep_labels | text_labels
+    else:
+        raise ValueError(f"invalid class: { type(x) }")
 
 
 def is_public(note):

@@ -1,7 +1,8 @@
 import gkeepapi
-from flask import abort
+from flask import abort, current_app
 import json
 import atexit
+import requests
 
 from . import config
 
@@ -20,7 +21,7 @@ def cached(func):
 
 class WrappedKeep(gkeepapi.Keep):
     def find_labels_extended(self, labels):
-        print("searcg notes with labels:", labels)
+        current_app.logger.info("searcg notes with labels:", labels)
         result = None
         if not labels:
             abort(400, "empty labels search")
@@ -58,16 +59,29 @@ def init():
         state = None
 
     try:
-        print("trying to login by password")
-        keep.login(config.keep_user, config.keep_pasw, state=state, sync=False)
-    except gkeepapi.exception.LoginException:
-        print("trying to login by master_token")
+        # disable password login
+        #current_app.logger.info("trying to login by password")
+        #keep.login(config.keep_user, config.keep_pasw, state=state, sync=False)
         keep.resume(
             config.keep_user,
             config.keep_master_token,
             state=state,
             sync=False,
         )
+    except gkeepapi.exception.LoginException as e:
+        current_app.logger.err(str(e))
+    except gkeepapi.exception.ResyncRequiredException as e:
+        current_app.logger.err(str(e))
+        current_app.logger.info("enforcing full resync")
+        keep.resume(
+            config.keep_user,
+            config.keep_master_token,
+            state=None,
+            sync=False,
+        )
+    except requests.exceptions.ConnectionError as e:
+        current_app.logger.info("failed to connect to internet")
+        current_app.logger.err(str(e))
 
 
 def save():

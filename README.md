@@ -14,6 +14,8 @@ google keep based personal knowledge database
 - [x] images
 - [x] pages
 - [ ] gallery
+- [x] knowledge graph
+- [x] knowledge graph explorer
 
 ## Run
 

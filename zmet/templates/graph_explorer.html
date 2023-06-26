@@ -1,0 +1,519 @@
+<html>
+<head>
+    <title>graph</title>
+    <style>
+        html {
+            height: 100%;
+            width: 100%;
+        }
+        body {
+          min-width:  100%;
+          min-height: 100%;
+          margin: 0px;
+          padding: 0px;
+          display: grid;
+          grid-template-columns: 70vw 30vw;
+          grid-template-rows: 1fr;
+          gap: 0px;
+        }
+        canvas {
+            image-rendering: pixelated;
+        }
+        #panel_wrapper {
+            background-color: rgb(240,240,240);
+        }
+        #canvas_wrapper {
+            background-color: rgb(255,255,255);
+        }
+        .hide { position:absolute; top:-1px; left:-1px; width:1px; height:1px; }
+    </style>
+</head>
+<body>
+    <div id="canvas_wrapper" onmousedown="return false;" oncontextmenu="return false;">
+        <canvas id="thecanvas"></canvas>
+    </div>
+    <div id="panel_wrapper">
+        <button onclick='fetch("/graph/load");reloadGraph();'>load</button>
+        <button onclick='fetch("/graph/save");'>save</button>
+        <button onclick='fetch("/graph/load_keep");'>load keep</button>
+        <button onclick='fetch("/graph/clear");objects = {};'>clear</button>
+        <button onclick='fetch("/graph/obsidianize");'>obsidianize</button>
+        <br />
+        <div id="add_wrapper">
+            <form action="/graph/add" method="post" target="blackhole_iframe">
+              <textarea style="width: 100%;" rows="15" name="text"></textarea>
+              <br />
+              <input type="submit">
+              <input type="hidden" name="csrf_token" value="{{ generate_csrf() }}">
+            </form>
+            <iframe name="blackhole_iframe"></iframe>
+        </div>
+        <div id="checkboxes_wrapper">
+            {% for force in ["central", "repulsive", "compulsive", "pull"] %}
+            <div>
+                <input type="checkbox" id="draw_{{ force }}_force_checkbox" name="draw_{{ force }}_force_checkbox">
+                <label for="draw_{{ force }}_force_checkbox">draw {{ force }} force</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        class Vector {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+            mult(a) {
+                return new Vector(a*this.x, a*this.y);
+            }
+            mult_mut(a) {
+                this.x *= a;
+                this.y *= a;
+                return this;
+            }
+            div(a) {
+                return new Vector(a/this.x, a/this.y);
+            }
+            div_mut(a) {
+                this.x /= a;
+                this.y /= a;
+                return this;
+            }
+            plus(other) {
+                return new Vector(this.x + other.x, this.y + other.y);
+            }
+            plus_mut(other) {
+                this.x += other.x;
+                this.y += other.y;
+                return this;
+            }
+            minus(other) {
+                return new Vector(this.x - other.x, this.y - other.y);
+            }
+            minus_mut(other) {
+                this.x -= other.x;
+                this.y -= other.y;
+                return this;
+            }
+            shorter_then(length) {
+                return this.x*this.x + this.y*this.y <= length*length;
+            }
+            len() {
+                return Math.sqrt(this.x*this.x + this.y*this.y);
+            }
+            matrix_mult(m) {
+                return new Vector(
+                    m[0][0]*this.x + m[0][1]*this.y,
+                    m[1][0]*this.x + m[1][1]*this.y,
+                );
+            }
+            normalize() {
+                var l = this.len();
+                this.x /= l;
+                this.y /= l;
+                return this;
+            }
+            normalized() {
+                var l = this.len();
+                return new Vector(this.x/l, this.y/l);
+            }
+            clone() {
+                return new Vector(this.x, this.y);
+            }
+            zeroize() {
+                this.x = 0;
+                this.y = 0;
+            }
+        }
+
+        class GraphObj {
+            constructor(name) {
+                this.name = name;
+                this.ins = [];
+                this.outs = [];
+                this.preds = [];
+            }
+            draw() {}
+            update() {}
+        }
+
+        class Node extends GraphObj {
+            constructor(name, data, pos) {
+                super(name);
+                this.data = data;
+                this.pos = pos;
+                this.central_force = new Vector(0, 0);
+                this.repulsive_force = new Vector(0, 0);
+                this.compulsive_force = new Vector(0, 0);
+                this.pull_force = new Vector(0, 0);
+            }
+            clear_forces() {
+                this.central_force.zeroize();
+                this.repulsive_force.zeroize();
+                this.compulsive_force.zeroize();
+                this.pull_force.zeroize();               
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(200,200,200,1)';
+                if (internalMouse.minus(this.pos).shorter_then(rad)) {
+                    ctx.strokeStyle = '#ff0000';
+                } else {
+                    ctx.strokeStyle = '#000000';
+                }
+                drawCircle(this.pos, rad);
+
+                ctx.fillStyle = "#0000ff";
+                ctx.font = "10px Arial";
+                ctx.textAlign = "center"; 
+                ctx.fillText(this.name, this.pos.x, this.pos.y - rad - 3);
+
+                if(document.getElementById('draw_central_force_checkbox').checked) {
+                    ctx.strokeStyle = '#0000ff';
+                    drawArrow(this.pos, this.pos.plus(this.central_force.mult(draw_forces_mult)));
+                }
+                if(document.getElementById('draw_repulsive_force_checkbox').checked) {
+                    ctx.strokeStyle = '#00ff00';
+                    drawArrow(this.pos, this.pos.plus(this.repulsive_force.mult(draw_forces_mult)));
+                }
+                if(document.getElementById('draw_compulsive_force_checkbox').checked) {
+                    ctx.strokeStyle = '#ff5500';
+                    drawArrow(this.pos, this.pos.plus(this.compulsive_force.mult(draw_forces_mult)));
+                }
+                if(document.getElementById('draw_pull_force_checkbox').checked) {
+                    ctx.strokeStyle = '#ff0000';
+                    drawArrow(this.pos, this.pos.plus(this.pull_force.mult(1)));
+                }
+            }
+            center() {
+                return this.pos.clone();
+            }
+            offset() {
+                return rad;
+            }
+            update(deltaTime) {
+                this.pos.plus_mut(
+                    this.central_force
+                    .plus(this.compulsive_force)
+                    .plus_mut(this.repulsive_force)
+                    .plus_mut(this.pull_force)
+                    .mult_mut(speed*deltaTime)
+                );
+            }
+        }
+
+        class Edge extends GraphObj {
+            constructor(name, from, to, predicate) {
+                super(name);
+                this.from = from;
+                this.to = to;
+                this.predicate = predicate;
+            }
+            draw() {
+                ctx.strokeStyle = '#000000';
+                drawArrow(this.from.pos, this.to.pos, this.from.offset(), this.to.offset());
+
+                ctx.fillStyle = "#0000ff";
+                ctx.font = "7px Arial";
+                ctx.textAlign = "center"; 
+                var center = this.center()
+                ctx.fillText(this.predicate.name, center.x, center.y); 
+            }
+            center() {
+                return this.from.pos.plus(this.to.pos).div_mut(2);
+            }
+            offset() {
+                return 0;
+            }
+        }
+
+        Object.values = Object.values || function(o){return Object.keys(o).map(function(k){return o[k]})};
+        const canvas = document.getElementById('thecanvas');
+        const ctx = canvas.getContext('2d');
+        var translatePos = new Vector(0, 0);
+
+        var scale = 1.0;
+        var scaleMultiplier = 0.8;
+        var startDragOffset = {};
+        var mouseLeftDown = false;
+        var mouseRightDown = false;
+        var internalMouse = new Vector(0, 0);
+        var pulledNode = null;
+        const rad = 10;
+        const draw_forces_mult = 40;
+        const speed = 0.01;
+        const repulsive_mult = -80000;
+        const compulsive_mult = 0.00005;
+        const central_mult = 1;
+        const pull_mult = 0.0000001;
+        const sin30 = Math.sin(Math.PI / 6);
+        const cos30 = Math.cos(Math.PI / 6);
+        const rot30 = [
+            [cos30, -sin30],
+            [sin30,  cos30],
+        ];
+        const rot330 = [
+            [ cos30, sin30],
+            [-sin30, cos30],
+        ];
+        var objects = {};
+
+        window.onload = function() {
+            var canvas_dim = new Vector(canvas.width, canvas.height);
+            translatePos = new Vector(canvas.width, canvas.height);
+            translatePos.div_mut(2);
+
+            canvas.addEventListener("wheel", e => {
+                var zoom = 1;
+                if (e.deltaY > 0) {
+                    zoom *= scaleMultiplier;
+                } else {
+                    zoom /= scaleMultiplier;
+                }
+                // TODO: change translation
+                scale *= zoom;
+            });
+
+            // add event listeners to handle screen drag
+            canvas.addEventListener("mousedown", function(e) {
+                switch (e.button) {
+                    case 0:
+                        Object.values(objects).forEach(obj => {
+                            if (obj instanceof Node) {
+                                if (internalMouse.minus(obj.pos).shorter_then(rad)) {
+                                    pulledNode = obj;
+                                }
+                            }   
+                        });
+                        mouseLeftDown = true;
+                    case 1:
+                        break;
+                    case 2:
+                        mouseRightDown = true;
+                        startDragOffset.x = e.clientX - translatePos.x;
+                        startDragOffset.y = e.clientY - translatePos.y;
+                        break;
+                    default:
+                        console.log(`Unknown button code: ${e.button}`);
+                }
+            });
+
+            canvas.addEventListener("mouseup", function(e) {
+                switch (e.button) {
+                    case 0:
+                        mouseLeftDown = false;
+                        pulledNode = null;
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        mouseRightDown = false;
+                        break;
+                    default:
+                        console.log(`Unknown button code: ${e.button}`);
+                }
+            });
+
+            canvas.addEventListener("mouseover", function(e) {
+                mouseLeftDown = false;
+                mouseRightDown = false;
+            });
+
+            canvas.addEventListener("mouseout", function(e) {
+                mouseLeftDown = false;
+                mouseRightDown = false;
+            });
+
+            canvas.addEventListener("mousemove", function(e) {
+                if (mouseRightDown) {
+                    translatePos.x = e.clientX - startDragOffset.x;
+                    translatePos.y = e.clientY - startDragOffset.y;
+                }
+                var mouse = new Vector(
+                    e.clientX - canvas.offsetLeft,
+                    e.clientY - canvas.offsetTop,
+                );
+                internalMouse = mouse.minus_mut(translatePos).div_mut(scale);
+            });
+
+            reloadGraph();
+        };
+
+        function reloadGraph() {
+            const graph = fetch("/graph/json")
+                .then(res => res.json())
+                .then(graph => {
+                    console.log(graph);
+                    objects = {}; // clear
+                    var objects_array = [];
+                    graph.forEach(obj => {
+                        console.log(obj);
+                        if (obj.type == "Node") {
+                            objects_array.push(new Node(
+                                obj.name,
+                                obj.data,
+                                new Vector(
+                                    Math.floor((Math.random()-0.5) * window.innerWidth),
+                                    Math.floor((Math.random()-0.5) * window.innerHeight),
+                                ),
+                            ));
+                        } else if (obj.type == "Edge") {
+                            objects_array.push(new Edge(
+                                obj.name,
+                                obj.object_index,
+                                obj.subject_index,
+                                obj.predicate_index,
+                            ));
+                        } else {
+                            console.err("unknown graph object type", obj.type);
+                        }
+                    });
+
+                    objects_array.forEach(obj => {
+                        if (obj instanceof Edge) {
+                            // replace edge indeces by real objects
+                            obj.from = objects_array[obj.from];
+                            obj.to = objects_array[obj.to];
+                            obj.predicate = objects_array[obj.predicate];
+
+                            // add references
+                            obj.to.ins.push(obj);
+                            obj.from.outs.push(obj);
+                            obj.predicate.preds.push(obj);
+                        }
+                        objects[obj.name] = obj;
+                    });
+                    console.log("graph reloaded")
+                })
+                .catch(err => { throw err });
+        }
+
+        function drawCircle(s, r) {
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, r, 0, 2 * Math.PI, false);
+            ctx.fill();
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function drawLine(a, b) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function drawArrow(from, to, fromOffset=0, toOffset=0) {
+            var headlen = 10; // length of head in pixels
+            var d = from.minus(to);
+            if (d.len() != 0) {
+                var dn = d.normalized();
+                from = from.plus(dn.mult(-fromOffset));
+                to = to.plus(dn.mult(toOffset));
+                var p1 = to.plus(dn.matrix_mult(rot30 ).mult_mut(headlen));
+                var p2 = to.plus(dn.matrix_mult(rot330).mult_mut(headlen));
+
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.lineTo(p1.x, p1.y);
+                ctx.moveTo(to.x, to.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+
+        function applyForces() {
+            Object.values(objects).forEach(node => {
+                if (node instanceof Node) { // force can be applied only to a node
+                    node.clear_forces();
+                    Object.values(objects).forEach(obj2 => {
+                        if (node != obj2) {
+                            var diff = obj2.center().minus_mut(node.pos);
+                            var dist = diff.len();
+                            if (dist != 0) {
+                                var v = diff.normalized();
+
+                                // forces applied only to nodes
+                                if (obj2 instanceof Node) {
+                                    // repulsive force
+                                    node.repulsive_force.plus_mut(v.mult(repulsive_mult).div_mut(dist*dist*dist));
+                                }
+
+                                obj2.outs.forEach(edge => {
+                                    if (edge.to == node) {
+                                        // compulsive force
+                                        // TODO: hnacka , protisila ??
+                                        node.compulsive_force.plus_mut(v.mult(compulsive_mult*Math.pow(dist, 2)));
+                                        obj2.compulsive_force.minus_mut(v.mult(compulsive_mult*Math.pow(dist, 2)));
+                                    }
+                                });
+                            } else {
+                                // push to random direction
+                                //node.repulsive_force.plus_mut(Vector(Math.random()*5, Math.random()*5));                            
+                            }
+                        }
+                    });
+                    // central force
+                    if(!node.pos.shorter_then(100)) {
+                        node.central_force.minus_mut(node.pos.normalized().mult_mut(central_mult));
+                    }
+                }
+            });
+
+            if (pulledNode) {
+                // mouse pull force
+                pulledNode.pull_force = internalMouse.minus(pulledNode.pos);
+            }
+        }
+
+        function drawCross() {
+            const cross = [
+                new Vector(0, 10),
+                new Vector(0, -10),
+                new Vector(10, 0),
+                new Vector(-10, 0),
+            ];
+            drawLine(cross[0], cross[1]);
+            drawLine(cross[2], cross[3]);
+        }
+
+        function draw() {
+            ctx.canvas.width  = window.innerWidth;
+            ctx.canvas.height = window.innerHeight;
+                  // clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(translatePos.x, translatePos.y);
+            ctx.scale(scale, scale);
+
+            ctx.lineWidth = 1;
+            drawCross();
+            Object.values(objects).forEach(obj => obj.draw());
+            if (pulledNode) {
+                ctx.strokeStyle = '#ff0000';
+                drawArrow(pulledNode.pos, internalMouse, pulledNode.offset(), 0);
+            };
+            ctx.restore();
+        }
+
+        let lastTime = 0;
+        function update(time = 0) {
+            const deltaTime = time - lastTime;
+
+            lastTime = time;
+
+            draw();
+            applyForces(); // TODO: time
+            Object.values(objects).forEach(obj => obj.update(deltaTime));
+            //console.log("updated", time);
+            requestAnimationFrame(update);
+        }
+
+        update();
+    </script>
+</body>
+</html>
+

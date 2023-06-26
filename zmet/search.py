@@ -18,7 +18,7 @@ def index():
     if query:
         return (
             try_redirect(query.rstrip()) or
-            redirect("https://google.com/search?q=" + quote_plus(query))
+            redirect("https://www.google.com/search?q=" + quote_plus(query))
         )
     else:
         return """

@@ -2,6 +2,8 @@ cache
 config.yaml
 poetry.lock
 
+graph_lang
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

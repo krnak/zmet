@@ -15,6 +15,7 @@ from . import redirection
 from . import label
 from . import egg
 from . import group
+from . import graph
 
 keep.init()
 
@@ -49,6 +50,8 @@ app.logger.info("wall registered")
 app.register_blueprint(egg.egg_bp)
 app.logger.info("egg registered")
 
+app.register_blueprint(graph.graph_bp)
+app.logger.info("graph registered")
 
 @app.route("/")
 @login_required
