@@ -17,6 +17,8 @@ gkeepapi = "^0.14.2"
 gunicorn = "^20.1.0"
 PyYAML = "^6.0"
 pycryptodome = "^3.16.0"
+pyoxigraph = "^0.3.18"
+uuid7 = "^0.1.0"
 
 [tool.poetry.dev-dependencies]
 

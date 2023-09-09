@@ -1,0 +1,20 @@
+<html>
+<head></head>
+<body>
+  <a href="/graph/query">new query</a><br />
+  <table>
+    <tr>
+      {% for var in variables %}
+      <th>{{ var }}</th>
+      {% endfor %}
+    </tr>
+    {% for row in data %}
+    <tr>
+      {% for var in variables %}
+      <td>{{ row[var] }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>  
+</body>
+</html>
