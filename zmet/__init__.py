@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
 from urllib.parse import quote_plus, unquote_plus
 from flask_login import login_required
+import threading
 
 from . import keep
 from . import auth
@@ -16,6 +17,7 @@ from . import label
 from . import egg
 from . import group
 from . import graph_api
+from . import scripts
 
 keep.init()
 
@@ -51,7 +53,14 @@ app.register_blueprint(egg.egg_bp)
 app.logger.info("egg registered")
 
 app.register_blueprint(graph_api.graph_bp)
-app.logger.info("graph registered")
+app.logger.info("graph_api registered")
+
+app.register_blueprint(scripts.scripts_bp)
+app.logger.info("scripts registered")
+
+app.logger.info("running script scheduler")
+threading.Thread(target=scripts.scripts_scheduler, daemon=True).start()
+
 
 @app.route("/")
 @login_required

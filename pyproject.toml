@@ -19,6 +19,7 @@ PyYAML = "^6.0"
 pycryptodome = "^3.16.0"
 pyoxigraph = "^0.3.18"
 uuid7 = "^0.1.0"
+schedule = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 
