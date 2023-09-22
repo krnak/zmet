@@ -7,6 +7,10 @@ WEEK_DAYS = ["pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota", 
 def day_ref(date):
 	return "d" + date.strftime("%y%m%d")
 
+def week_ref(date):
+	date -= datetime.timedelta(days=date.weekday())
+	return "t" + date.strftime("%y%m%d")
+
 def create_day_note(date, day_name, text=""):
 	return keep.createNote(
 		title=f'🌅 { day_name } { date.strftime("%d.%m.%Y") } &{ day_ref(date) }',
@@ -37,13 +41,23 @@ def create_weekly_note(ref):
 			create_day_note(date, day_name)
 
 	week_note = keep.createNote(
-		title=f'🗓️ týden { date0.strftime("%d.%m.%Y") } &t{ day_ref(date0)[1:] }',
+		title=f'🗓️ týden { date0.strftime("%d.%m.%Y") } &{ week_ref(date0) }',
 		text="\n".join(lines)
 	)
 
 	keep.sync()
 
 	yield f'created note: 🗓️ týden { date0.strftime("%d.%m.%Y") }'
+
+
+def create_next_6_weekly_notes():
+	today = datetime.date.today()
+	week_day = today.weekday()
+	next_monday = today + datetime.timedelta(days=(-week_day)%7)
+	for i in range(6):
+		monday_i = next_monday + datetime.timedelta(days=7*i)
+		ref = week_ref(monday_i)
+		yield from create_weekly_note(ref)
 
 
 def pin_todays_note():

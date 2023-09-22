@@ -5,6 +5,7 @@ from ..auth import admin_required
 import threading
 import time
 import schedule
+import datetime
 
 scripts_bp = Blueprint("scripts", __name__, url_prefix="/scripts", template_folder="templates")
 
@@ -27,6 +28,11 @@ def index():
 				<input type="submit" value="create weekly note" name="Submit"/>
 				for week <input type="text" name="ref">
 			</form>
+			</li>
+			<li>
+			<a href="{ url_for("scripts.create_next_6_weekly_notes") }">
+			   <button>create_next_6_weekly_notes</button>
+			</a>
 			</li>
 		</ul>
 	</body>
@@ -55,16 +61,33 @@ def create_weekly_note():
 	return eval_script(calendar.create_weekly_note(ref))
 
 
+@scripts_bp.route("/create_next_6_weekly_notes")
+@admin_required
+def create_next_6_weekly_notes():
+	return eval_script(calendar.create_next_6_weekly_notes())
+
+
 def scripts_scheduler(interval=60):
-	# todo: lambdas evaluation on generators ???
 	schedule.every(10).minutes.do(
-		lambda: eval_script(mosaic.update_mosaics()))
-	# schedule.every().monday.at("03:00", "Europe/Amsterdam").do(
-	#	lambda: eval_script())
-	schedule.every().day.at("03:00", "Europe/Amsterdam").do(
-		lambda: eval_script(calendar.pin_todays_note()))
-	schedule.every().day.at("03:00", "Europe/Amsterdam").do(
-		lambda: eval_script(calendar.unpin_yesterdays_note()))
+		lambda: eval_script(
+			mosaic.update_mosaics()
+		)
+	)
+	schedule.every().sunday.at("03:00").do(
+		lambda: eval_script(
+			calendar.create_next_6_weekly_notes()
+		)
+	)
+	schedule.every().day.at("03:00").do(
+		lambda: eval_script(
+			calendar.pin_todays_note()
+		)
+	)
+	schedule.every().day.at("03:00").do(
+		lambda: eval_script(
+			calendar.unpin_yesterdays_note()
+		)
+	)
 
 	while True:
 		schedule.run_pending()

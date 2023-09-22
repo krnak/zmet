@@ -61,6 +61,7 @@ def as_ttl():
 
 
 @graph_bp.route("/")
+@admin_required
 def index():
     return """
     <html>
