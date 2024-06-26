@@ -65,7 +65,7 @@ threading.Thread(target=scripts.scripts_scheduler, daemon=True).start()
 @app.route("/")
 @login_required
 def index():
-    return redirect(url_for("wall.wall", labels="zmet_index"))
+    return redirect(config.homepage)
 
 
 @app.route("/sync")
