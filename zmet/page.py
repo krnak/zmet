@@ -22,13 +22,14 @@ def note(id):
     if note.title:
         content.append(f"<h1>{ note.title }</h1><br />")
 
-    # strip labels
+    # strip labels and short links
     lines = note.text.split("\n")
-    print(lines)
     while lines and lines[-1] == "":
         lines.pop()
-    if lines and lines[-1].startswith("#"):
-        lines = lines[:-1]
+    while lines and lines[-1].startswith("#"):
+        lines.pop()
+    while lines and lines[-1].startswith("shortlink: "):
+        lines.pop()
     text = "\n".join(lines)
 
     if text:

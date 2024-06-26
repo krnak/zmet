@@ -18,6 +18,7 @@ from . import egg
 from . import group
 from . import graph_api
 from . import scripts
+from . import shortlink
 
 keep.init()
 
@@ -57,6 +58,9 @@ app.logger.info("graph_api registered")
 
 app.register_blueprint(scripts.scripts_bp)
 app.logger.info("scripts registered")
+
+app.register_blueprint(shortlink.shortlink_bp)
+app.logger.info("shortlink registered")
 
 app.logger.info("running script scheduler")
 threading.Thread(target=scripts.scripts_scheduler, daemon=True).start()
