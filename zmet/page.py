@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, abort
 from flask_login import login_required, current_user
 from .keep import keep
 from .label import is_public
+from . import access
 import markdown
 
 page = Blueprint("page", __name__)
@@ -12,7 +13,7 @@ def note(id):
     note = keep.get(id)
     if not note:
         abort(404, "note not found")
-    if current_user.id != "admin" and not is_public(note):
+    if access.access_to(note) < access.VIEW:
         abort(403)
     content = []
     # TODO: move content creation into jinja

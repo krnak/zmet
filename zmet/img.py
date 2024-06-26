@@ -5,25 +5,29 @@ import os
 import requests
 import shutil
 from . import config
+from . import access
 
 img = Blueprint("img", __name__, url_prefix="/img")
 IMG_CACHE_PATH = config.cache_path + "/img"
 
 
 @img.route("/<id>")
-@login_required
 def get(id):
+    try:
+        note_id, index = id.split(":")
+    except ValueError:
+        abort(400, description="invalid id")
+    note = keep.get(note_id)
+    if not note:
+        abort(404, "note not found")
+    if access.access_to(note) < access.VIEW:
+        abort(403)
     filename = f"{IMG_CACHE_PATH}/{id}"
     if id not in os.listdir(IMG_CACHE_PATH):
-        try:
-            node_id, index = id.split(":")
-        except ValueError:
-            abort(400, description="invalid id")
-        node = keep.get(node_id)
-        if node is None:
+        if note is None:
             abort(404, description="image parent not found")
         try:
-            blob = node.images[int(index)]
+            blob = note.images[int(index)]
         except IndexError:
             abort(404, description="index out of range")
         except ValueError:
