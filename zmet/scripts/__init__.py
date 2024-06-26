@@ -1,6 +1,7 @@
 from flask import Blueprint, Response, redirect, url_for, request, current_app, render_template
 from . import calendar
 from . import mosaic
+from . import sync
 from ..auth import admin_required
 import threading
 import time
@@ -66,8 +67,14 @@ def create_weekly_note():
 def create_next_6_weekly_notes():
 	return eval_script(calendar.create_next_6_weekly_notes())
 
+@scripts_bp.route("/sync")
+@admin_required
+def sync_script():
+	return eval_script(sync.sync())
 
-def scripts_scheduler(interval=60):
+
+def scripts_scheduler(interval=10):
+	"""
 	schedule.every(10).minutes.do(
 		lambda: eval_script(
 			mosaic.update_mosaics()
@@ -88,6 +95,10 @@ def scripts_scheduler(interval=60):
 			calendar.unpin_yesterdays_note()
 		)
 	)
+	schedule.every(10).seconds.do(
+		lambda: eval_script(sync.sync())
+	)
+	"""
 
 	while True:
 		schedule.run_pending()
