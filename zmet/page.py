@@ -8,7 +8,6 @@ page = Blueprint("page", __name__)
 
 
 @page.route("/note/<id>")
-@login_required
 def note(id):
     note = keep.get(id)
     if not note:
