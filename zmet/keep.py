@@ -21,7 +21,7 @@ def cached(func):
 
 class WrappedKeep(gkeepapi.Keep):
     def find_labels_extended(self, labels):
-        current_app.logger.info("searcg notes with labels:", labels)
+        current_app.logger.info("searching notes with labels: " + str(labels))
         result = None
         if not labels:
             abort(400, "empty labels search")
