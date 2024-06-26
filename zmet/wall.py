@@ -52,7 +52,6 @@ def note_to_card(note):
 
 
 @wall_bp.route("/wall")
-@login_required
 def wall():
     labels = request.args.get("labels")
     query = request.args.get("q")

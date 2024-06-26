@@ -17,6 +17,7 @@ def access_to(note):
 	if is_public(note):
 		return VIEW
 
+	"""
 	access_symbols = []
 	for cookie_name in request.cookies.keys():
 		if cookie_name.startswith("view-"):
@@ -32,6 +33,7 @@ def access_to(note):
 				pass
 
 		# TODO: link access
+	"""
 
 	return NONE
 

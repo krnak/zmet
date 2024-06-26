@@ -63,7 +63,6 @@ threading.Thread(target=scripts.scripts_scheduler, daemon=True).start()
 
 
 @app.route("/")
-@login_required
 def index():
     return redirect(config.homepage)
 
