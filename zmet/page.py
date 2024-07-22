@@ -33,6 +33,10 @@ def note(id):
     text = "\n".join(lines)
 
     if text:
-        content.append(markdown.markdown(text, extensions=["nl2br", "fenced_code"]))
+        content.append(markdown.markdown(text, extensions=[
+            "nl2br",
+            "fenced_code",
+            "mdx_linkify", # makes links clickable with `linkify` extension
+        ]))
 
     return render_template("page.html", content="".join(content))
