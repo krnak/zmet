@@ -2,16 +2,6 @@
 
 {% block content %}
 <style>
-    #main {
-        padding-top: 0px;
-        padding-bottom: 30px;
-        padding-left: 0px;
-        padding-right: 0px;
-        box-shadow:
-            0px 0 8px 0px black,
-            0px 0 8px 0px black;
-        background-color: white;
-    }
     img {
       max-width:100%;
     }
@@ -40,9 +30,34 @@
         color: black;
         background-color: rgb(230,230,230);
     }
+    @media (min-width: 768px) {
+        #int-frame {
+            padding-top: 0px;
+            padding-bottom: 30px;
+            padding-left: 0px;
+            padding-right: 0px;
+            box-shadow:
+                0px 0 8px 0px black,
+                0px 0 8px 0px black;
+            background-color: white;
+        }
+        #ext-frame {
+            width: 100%;
+            margin-right: auto;
+            margin-left: auto;
+            display: flex;
+            flex: 0 0 58.333333%; /* com-md-7 */
+            max-width: 58.333333%; /* com-md-7 */
+            justify-content: center;
+        }
+    }
+}
+
+        }
+    }
 </style>
-<div class="container d-flex justify-content-center">
-    <div id="main" class="col-md-7">
+<div id="ext-frame">
+    <div id="int-frame">
         <article>
             {{ content | safe }}
         </article>
