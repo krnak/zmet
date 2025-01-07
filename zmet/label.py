@@ -13,10 +13,10 @@ class Label:
     def __init__(self, note):
         self.note = note
         self.name = note.title[len("#label "):]
-        self.salt = ""
-        for line in note.split("\n"):
-            if line.startswith("salt: "):
-                self.salt = line[len("salt: "):]
+        #self.salt = ""
+        #for line in note.text.split("\n"):
+        #    if line.startswith("salt: "):
+        #       self.salt = line[len("salt: "):]
         self.labels = labels_of(note)
 
 
@@ -36,7 +36,14 @@ def labels_of(x):
 
 
 def is_public(note):
-    return "public" in labels_of(note)
+    for label in labels_of(note):
+        # directly labeled as public
+        if label == "public":
+            return True
+        # transitive publicity
+        if label in CACHE and "public" in CACHE[label].labels:
+            return True
+    return False
 
 
 def sync():
