@@ -79,7 +79,7 @@ def sync():
     try:
         keep.keep.sync()
     except gkeepapi.exception.ResyncRequiredException:
-        keek.keep.sync(resync=True)
+        keep.keep.sync(resync=True)
     redirection.sync()
     label.sync()
     group.sync()
