@@ -3,6 +3,7 @@ from flask_wtf.csrf import CSRFProtect
 from urllib.parse import quote_plus, unquote_plus
 from flask_login import login_required
 import threading
+import gkeepapi
 
 from . import keep
 from . import auth
@@ -75,7 +76,10 @@ def index():
 @auth.admin_required
 def sync():
     app.logger.info("sync requested...")
-    keep.keep.sync()
+    try:
+        keep.keep.sync()
+    except gkeepapi.exception.ResyncRequiredException:
+        keek.keep.sync(resync=True)
     redirection.sync()
     label.sync()
     group.sync()
