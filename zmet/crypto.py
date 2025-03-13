@@ -36,3 +36,8 @@ def decrypt_token(token):
 	else:
 		salt = ""
 	return (name, salt)
+
+
+def node_view_token(node):
+	digest = sha256((config.app_secret_key + "view_token" + node.server_id).encode()).digest()
+	return b64_encode(digest)[:22].decode()  # 22 symbols to reach 128-bit entropy

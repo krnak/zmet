@@ -17,6 +17,11 @@ def access_to(note):
 	if is_public(note):
 		return VIEW
 
+	# view token
+	vt = request.args.get("vt")
+	if vt and vt == crypto.node_view_token(note):
+		return VIEW
+
 	"""
 	access_symbols = []
 	for cookie_name in request.cookies.keys():
