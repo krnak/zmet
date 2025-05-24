@@ -20,6 +20,7 @@ from . import group
 from . import graph_api
 from . import scripts
 from . import shortlink
+from . import aes_page
 
 keep.init()
 
@@ -66,6 +67,8 @@ app.logger.info("shortlink registered")
 app.logger.info("running script scheduler")
 threading.Thread(target=scripts.scripts_scheduler, daemon=True).start()
 
+app.register_blueprint(aes_page.aes_page_bp)
+app.logger.info("aes_page registered")
 
 @app.route("/")
 def index():
