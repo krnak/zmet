@@ -28,6 +28,21 @@
 </div>
 
 <script>
+// URL-safe Base64 encoding/decoding functions
+function base64UrlEncode(buffer) {
+    return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+}
+
+function base64UrlDecode(str) {
+    // Add back padding if needed
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    return new Uint8Array(
+        atob(str).split('').map(char => char.charCodeAt(0))
+    );
+}
+
 // Function to derive key from password
 async function getKeyFromPassword(password, salt) {
     const enc = new TextEncoder();
@@ -87,11 +102,15 @@ async function encryptMessage() {
             enc.encode(plaintext)
         );
 
-        // Combine salt + iv + ciphertext and convert to base64
+        // Combine salt + iv + ciphertext and convert to URL-safe base64
         const combined = new Uint8Array([...salt, ...iv, ...new Uint8Array(encrypted)]);
-        const base64Ciphertext = btoa(String.fromCharCode(...combined));
-        
-        document.getElementById('ciphertext').value = base64Ciphertext;
+        const base64UrlCiphertext = base64UrlEncode(combined);
+
+        fetch(`/saltpack/armor?message=${base64UrlCiphertext}`)
+            .then(res => res.text())
+            .then(text => document.getElementById('ciphertext').value = text)
+            .catch(error => showStatus('Encryption failed: ' + error.message, true));
+
         showStatus('Message encrypted successfully!');
     } catch (error) {
         showStatus('Encryption failed: ' + error.message, true);
@@ -102,17 +121,19 @@ async function encryptMessage() {
 async function decryptMessage() {
     try {
         const password = document.getElementById('password').value;
-        const base64Ciphertext = document.getElementById('ciphertext').value;
-        
-        if (!password || !base64Ciphertext) {
+        const saltpackArmoredCiphertext = document.getElementById('ciphertext').value;
+
+        if (!password || !saltpackArmoredCiphertext) {
             showStatus('Please enter both password and ciphertext', true);
             return;
         }
 
-        // Decode base64 and extract salt, iv, and ciphertext
-        const combined = new Uint8Array(
-            atob(base64Ciphertext).split('').map(char => char.charCodeAt(0))
-        );
+        const base64UrlCiphertext = await fetch(`/saltpack/dearmor?message=${saltpackArmoredCiphertext}`)
+                    .then(response => response.text())
+                    .catch(error => showStatus('Decoding failed: ' + error.message, true));
+
+        // Decode URL-safe base64 and extract salt, iv, and ciphertext
+        const combined = base64UrlDecode(base64UrlCiphertext);
         
         const salt = combined.slice(0, 16);
         const iv = combined.slice(16, 28);

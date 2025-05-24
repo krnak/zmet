@@ -1,9 +1,16 @@
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, render_template, request, abort
+
 from flask_wtf.csrf import CSRFProtect
 from urllib.parse import quote_plus, unquote_plus
 from flask_login import login_required
 import threading
 import gkeepapi
+
+from base64 import (
+    urlsafe_b64encode as b64_encode,
+    urlsafe_b64decode as b64_decode,
+)
+from . import saltpack_armor
 
 from . import keep
 from . import auth
@@ -20,7 +27,6 @@ from . import group
 from . import graph_api
 from . import scripts
 from . import shortlink
-from . import aes_page
 
 keep.init()
 
@@ -67,9 +73,6 @@ app.logger.info("shortlink registered")
 app.logger.info("running script scheduler")
 threading.Thread(target=scripts.scripts_scheduler, daemon=True).start()
 
-app.register_blueprint(aes_page.aes_page_bp)
-app.logger.info("aes_page registered")
-
 @app.route("/")
 def index():
     return redirect(config.homepage)
@@ -88,3 +91,36 @@ def sync():
     group.sync()
     app.logger.info("synced")
     return redirect(url_for("wall.wall", labels="zmet_index"))
+
+@app.route("/aes")
+def aes_page():
+    return render_template("aes_page.html")
+
+@app.route("/saltpack/armor")
+def saltpack_armor_service():
+    message = request.args.get("message")
+    if not message:
+        abort(400, "Missing base64 encoded `message` argument")
+
+    try:
+        message = b64_decode(message)
+    except Exception as e:
+        abort(422,
+            "Base64 decoding. Message:\n" +
+            request.args.get("message") + "\n" +
+            str(e))
+
+    return saltpack_armor.armor(message)
+
+@app.route("/saltpack/dearmor")
+def saltpack_dearmor_service():
+    message = request.args.get("message")
+    if not message:
+        abort(400, "Missing Saltpack encoded `message` argument")
+
+    try:
+        message = saltpack_armor.dearmor(message)
+    except:
+        abort(422, "Saltpack decoding failed. Message: " + request.args.get("message"))
+
+    return b64_encode(message)
